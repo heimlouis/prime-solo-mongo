@@ -1,0 +1,85 @@
+1)  Create a collection named orders.
+        db.createCollection('orders')
+
+2)  Insert at least 3 documents that represent an order. IMPORTANT: See section below for fields. Order dates should be: 2017-02-03, 2017-04-04, 2017-01-02
+        db.orders.insert({ orderDate: ISODate("2017-02-03"), orderTotal: NumberDecimal("1.99"), lineItems: [{unitPrice: NumberDecimal("0.01")}, {quantity: NumberDecimal("199.00")}, {productName: "something fun"}]});
+            WriteResult({ "nInserted" : 1 })
+        db.orders.insert({ orderDate: ISODate("2017-04-04"), orderTotal: NumberDecimal("2.00"), lineItems: [{unitPrice: NumberDecimal("1.00")}, {quantity: NumberDecimal("2.00")}, {productName: "something !fun"}]});
+            WriteResult({ "nInserted" : 1 })
+        db.orders.insert({ orderDate: ISODate("2017-01-02"), orderTotal: NumberDecimal("45000.00"), lineItems: [{unitPrice: NumberDecimal("45000.00")}, {quantity: NumberDecimal("1.00")}, {productName: "something !fun"}]});
+            WriteResult({ "nInserted" : 1 })
+
+3)  Find all orders and make them look pretty.
+        > db.orders.find().pretty()
+            {
+                "_id" : ObjectId("5a9725ea672b89249ac0e0a6"),
+                "orderDate" : ISODate("2017-02-03T00:00:00Z"),
+                "orderTotal" : NumberDecimal("1.99"),
+                "lineItems" : [
+                    {
+                        "unitPrice" : NumberDecimal("0.01")
+                    },
+                    {
+                        "quantity" : NumberDecimal("199.00")
+                    },
+                    {
+                        "productName" : "something fun"
+                    }
+                ]
+            }
+            {
+                "_id" : ObjectId("5a972663672b89249ac0e0a7"),
+                "orderDate" : ISODate("2017-04-04T00:00:00Z"),
+                "orderTotal" : NumberDecimal("2.00"),
+                "lineItems" : [
+                    {
+                        "unitPrice" : NumberDecimal("1.00")
+                    },
+                    {
+                        "quantity" : NumberDecimal("2.00")
+                    },
+                    {
+                        "productName" : "something !fun"
+                    }
+                ]
+            }
+            {
+                "_id" : ObjectId("5a972696672b89249ac0e0a8"),
+                "orderDate" : ISODate("2017-01-02T00:00:00Z"),
+                "orderTotal" : NumberDecimal("45000.00"),
+                "lineItems" : [
+                    {
+                        "unitPrice" : NumberDecimal("45000.00")
+                    },
+                    {
+                        "quantity" : NumberDecimal("1.00")
+                    },
+                    {
+                        "productName" : "something !fun"
+                    }
+                ]
+            }
+
+4)  Find all orders with an orderDate that is after 1/31/2017.
+        > db.orders.find({orderDate:{$gt:ISODate("2017-01-31")}});
+        { "_id" : ObjectId("5a9725ea672b89249ac0e0a6"), "orderDate" : ISODate("2017-02-03T00:00:00Z"), "orderTotal" : NumberDecimal("1.99"), "lineItems" : [ { "unitPrice" : NumberDecimal("0.01") }, { "quantity" : NumberDecimal("199.00") }, { "productName" : "something fun" } ] }
+        { "_id" : ObjectId("5a972663672b89249ac0e0a7"), "orderDate" : ISODate("2017-04-04T00:00:00Z"), "orderTotal" : NumberDecimal("2.00"), "lineItems" : [ { "unitPrice" : NumberDecimal("1.00") }, { "quantity" : NumberDecimal("2.00") }, { "productName" : "something !fun" } ] }
+
+5)  Change the orderTotal from 2/3/2017 to 63 dollars (you do NOT have to ensure the lineItems' unitPrice * quantity add up to the orderTotal)
+        { "_id" : ObjectId("5a972663672b89249ac0e0a7"), "orderDate" : ISODate("2017-04-04T00:00:00Z"), "orderTotal" : NumberDecimal("2.00"), "lineItems" : [ { "unitPrice" : NumberDecimal("1.00") }, { "quantity" : NumberDecimal("2.00") }, { "productName" : "something !fun" } ] }
+            > db.orders.update({orderDate:ISODate("2017-02-03")},{$set:{orderTotal:NumberDecimal("63.00")}});
+            WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+
+6)  Add another lineItem to the order from 4/4/2017
+        > db.orders.update({orderDate:ISODate("2017-04-04")},{$push:{lineItmes:{someNumber:NumberDecimal("987654321")}}});
+        WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+
+7)  Change the first lineItem in the order from 1/2/2017 to be for 2 'transistor radio's
+        > db.orders.update({orderDate:ISODate("2017-02-03")},{$set:{quantity:NumberDecimal("2.00")}});
+        WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+        > db.orders.update({orderDate:ISODate("2017-02-03")},{$set:{productName:("transistor radio")}});
+        WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+
+8)  Find orders with lineItems that have a quantity that is less than 10, but greater than 2. You will have to research $elemMatch
+        > db.orders.find({'quantity':{$gte:2},'quantity':{$lte:10}})
+        { "_id" : ObjectId("5a9725ea672b89249ac0e0a6"), "orderDate" : ISODate("2017-02-03T00:00:00Z"), "orderTotal" : NumberDecimal("63.00"), "lineItems" : [ { "unitPrice" : NumberDecimal("0.01") }, { "quantity" : NumberDecimal("199.00") }, { "productName" : "something fun" } ], "quantity" : NumberDecimal("2.00"), "productName" : "transistor radio" }
